@@ -1,0 +1,36 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential git zip unzip openjdk-11-jdk python3-pip python3-setuptools python3-wheel python3-virtualenv libffi-dev libssl-dev
+          pip install buildozer cython virtualenv
+
+      - name: Build APK
+        run: |
+          buildozer init
+          sed -i 's/package.name =.*/package.name = MyKivyApp/' buildozer.spec
+          sed -i 's/package.domain =.*/package.domain = org.example/' buildozer.spec
+          buildozer -v android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: MyKivyApp
+          path: bin/*.apk
